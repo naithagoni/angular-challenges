@@ -1,4 +1,3 @@
-import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 interface Person {
@@ -6,15 +5,16 @@ interface Person {
 }
 
 @Component({
-  imports: [NgFor, NgIf],
+  imports: [],
   selector: 'app-root',
   template: `
-    <ng-container *ngIf="persons.length > 0; else emptyList">
-      <div *ngFor="let person of persons">
+    @if (persons.length > 0) {
+      @for (person of persons; track person.name) {
         {{ person.name }}
-      </div>
-    </ng-container>
-    <ng-template #emptyList>The list is empty !!</ng-template>
+      }
+    } @else {
+      <span>The list is empty !!</span>
+    }
   `,
   styles: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
