@@ -1,49 +1,48 @@
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit } from '@angular/core';
-import { randText } from '@ngneat/falso';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { take } from 'rxjs';
+import { TodoService } from './todo.service';
+import { Todo } from './todo.model';
 
 @Component({
-  imports: [CommonModule],
+  imports: [MatProgressSpinnerModule],
   selector: 'app-root',
   template: `
-    @for (todo of todos; track todo.id) {
-      {{ todo.title }}
-      <button (click)="update(todo)">Update</button>
+    @if (loading()) {
+    <div class="flex items-center justify-center h-screen">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+    }@else {
+    <ul class="list-none list-inside space-y-2 p-4">
+      @for (todo of todos(); track todo.id) {
+        <li class="flex items-center justify-between gap-2">
+          <span>{{ todo.title }}</span>
+          <div class="flex gap-2">
+            <button class="bg-blue-500 text-white px-2 py-1 rounded-md" (click)="updateTodo(todo)">Update</button>
+            <button class="bg-red-500 text-white px-2 py-1 rounded-md" (click)="deleteTodo(todo)">Delete</button>
+          </div>
+        </li>
+      }
+    </ul>
     }
   `,
   styles: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit {
-  private http = inject(HttpClient)
-  todos!: any[];
-
-  ngOnInit(): void {
-    this.http
-      .get<any[]>('https://jsonplaceholder.typicode.com/todos')
-      .subscribe((todos) => {
-        this.todos = todos;
-      });
+  private todoService = inject(TodoService)
+  public todos = this.todoService.todos;
+  public loading = this.todoService.loading;
+  
+  public updateTodo = (todo: Todo) => {
+    this.todoService.updateTodo(todo).pipe(take(1)).subscribe();
+  }
+  
+  public deleteTodo = (todo: Todo) => {
+    this.todoService.deleteTodo(todo).pipe(take(1)).subscribe();
   }
 
-  update(todo: any) {
-    this.http
-      .put<any>(
-        `https://jsonplaceholder.typicode.com/todos/${todo.id}`,
-        JSON.stringify({
-          todo: todo.id,
-          title: randText(),
-          body: todo.body,
-          userId: todo.userId,
-        }),
-        {
-          headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-          },
-        },
-      )
-      .subscribe((todoUpdated: any) => {
-        this.todos[todoUpdated.id - 1] = todoUpdated;
-      });
+  public ngOnInit(): void {
+    this.todoService.getTodos().pipe(take(1)).subscribe();
   }
 }
