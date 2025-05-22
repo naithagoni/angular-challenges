@@ -1,23 +1,22 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { randText } from '@ngneat/falso';
 
 @Component({
   imports: [CommonModule],
   selector: 'app-root',
   template: `
-    <div *ngFor="let todo of todos">
+    @for (todo of todos; track todo.id) {
       {{ todo.title }}
       <button (click)="update(todo)">Update</button>
-    </div>
+    }
   `,
   styles: [],
 })
 export class AppComponent implements OnInit {
+  private http = inject(HttpClient)
   todos!: any[];
-
-  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.http
